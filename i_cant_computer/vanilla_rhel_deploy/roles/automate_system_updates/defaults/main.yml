@@ -1,0 +1,2 @@
+automate_system_updates_schedule: "*-*-* 01:00:00"
+automate_system_updates_randomize_delay: "10m"

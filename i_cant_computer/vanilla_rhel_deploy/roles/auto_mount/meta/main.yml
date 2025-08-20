@@ -1,0 +1,11 @@
+---
+galaxy_info:
+  author: i_cant_computer
+  role_name: auto_mount
+  description: Configure automatic mount of a LUKS-backed filesystem.
+  license: MIT
+  min_ansible_version: "2.10"
+  platforms:
+    - name: EL
+      versions: ["9"]
+dependencies: []

@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: MIT
+---
+# Minimum ansible-core version supported by this collection
+requires_ansible: '>=2.16.0'
+
+# Keep the rest empty until plugins are added.
+# plugin_routing:
+#   modules:
+#     old_module_name:
+#       redirect: i_cant_computer.vanilla_rhel_deploy.new_module_name
+#     deprecated_module_name:
+#       deprecation:
+#         removal_version: '2.0.0'
+#         warning_text: 'Use i_cant_computer.vanilla_rhel_deploy.new_module_name instead.'
+
+# import_redirection:
+#   ansible_collections.i_cant_computer.vanilla_rhel_deploy.plugins.module_utils.old_loc:
+#     redirect: ansible_collections.i_cant_computer.vanilla_rhel_deploy.plugins.module_utils.new_loc
+
+# action_groups:
+#   system_setup:
+#     - tpm_configure
+#     - luks_manage

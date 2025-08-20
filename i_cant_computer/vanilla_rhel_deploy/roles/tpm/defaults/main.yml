@@ -1,0 +1,9 @@
+tpm_luks_uuid: "{{ primary_luks_uuid }}"
+tpm_luks_passphrase: "{{ primary_luks_passphrase }}"
+tpm_luks_slot: "{{ primary_luks_tpm_slot }}"
+tpm_luks_path: "/dev/disk/by-uuid/{{ luks_uuid }}"
+tpm_clevis_config:
+  hash: "sha256"
+  key: "rsa"
+  pcr_bank: "sha256"
+  pcr_ids: "1,7"

@@ -1,0 +1,50 @@
+- name: Determine luks target and key
+  ansible.builtin.set_fact:
+    auto_mount_luks_target: luks-{{ auto_mount_luks_uuid }}
+    auto_mount_luks_key:
+      "/etc/.luks-slot{{ auto_mount_luks_slot }}-{{ auto_mount_luks_uuid
+      }}.crypt"
+- name: Determine crypttab and fstab entries
+  ansible.builtin.set_fact:
+    auto_mount_crypttab_entry:
+      "{{ auto_mount_luks_target }} UUID={{ auto_mount_luks_uuid }} {{ auto_mount_luks_key }} luks,discard"
+    auto_mount_fstab_entry:
+      "/dev/mapper/{{ auto_mount_luks_target }} {{ auto_mount_mount_point }} {{ auto_mount_filesystem }} defaults,nofail 0 0"
+
+- name: Add entry to cryptfile
+  ansible.builtin.lineinfile:
+    path: /etc/crypttab
+    line: "{{ auto_mount_crypttab_entry }}"
+    search_string: "{{ auto_mount_crypttab_entry }}"
+  become: true
+  register: auto_mount_crypttab
+
+- name: Add entry to fstab
+  ansible.builtin.lineinfile:
+    path: /etc/fstab
+    line: "{{ auto_mount_fstab_entry }}"
+    search_string: "{{ auto_mount_fstab_entry }}"
+  become: true
+  register: auto_mount_fstab
+
+- name: Reboot the server
+  ansible.builtin.reboot:
+    reboot_timeout: 600
+    test_command: uptime
+  become: true
+  when: auto_mount_crypttab.changed or auto_mount_fstab.changed
+
+- name: Check mount presence for {{ auto_mount_mount_point }}
+  ansible.builtin.command:
+    cmd: "findmnt -nr -T {{ auto_mount_mount_point }}"
+  register: auto_mount_findmnt_cmd
+  changed_when: false
+  failed_when: false
+
+- name: Verify new mountpoint present
+  ansible.builtin.set_fact:
+    auto_mount_mount_successful: "{{ auto_mount_findmnt_cmd.rc == 0 }}"
+
+- name: Assert mount succeeded
+  ansible.builtin.assert:
+    that: auto_mount_mount_successful

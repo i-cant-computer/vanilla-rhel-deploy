@@ -1,0 +1,11 @@
+---
+galaxy_info:
+  author: i_cant_computer
+  role_name: luks
+  description: Manage LUKS recovery key slots and header backups.
+  license: MIT
+  min_ansible_version: "2.10"
+  platforms:
+    - name: EL
+      versions: ['9']
+dependencies: []

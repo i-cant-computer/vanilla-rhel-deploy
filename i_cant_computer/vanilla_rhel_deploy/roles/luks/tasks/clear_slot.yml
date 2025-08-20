@@ -1,0 +1,10 @@
+- name: "Clear LUKS slot {{ luks_slot }}"
+  become: true
+  ansible.builtin.command:
+    "systemd-cryptenroll --wipe-slot={{ luks_slot }} /dev/disk/by-uuid/{{
+    luks_uuid }}"
+  register: luks_clear_slot
+  failed_when:
+    luks_clear_slot.rc != 0 and 'Failed to wipe non-existent slot' not in
+    luks_clear_slot.stderr
+  changed_when: luks_clear_slot.rc != 0

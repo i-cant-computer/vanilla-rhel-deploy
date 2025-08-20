@@ -1,0 +1,6 @@
+# Restrict '{{ ansible_user }}' to public key authentication only
+Match User {{ ansible_user }}
+    PasswordAuthentication no
+    KeyboardInteractiveAuthentication no
+    ChallengeResponseAuthentication no
+    AuthenticationMethods publickey

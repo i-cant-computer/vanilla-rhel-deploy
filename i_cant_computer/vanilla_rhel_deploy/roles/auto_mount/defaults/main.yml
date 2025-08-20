@@ -1,0 +1,4 @@
+auto_mount_luks_uuid: "{{ backup_luks_uuid }}"
+auto_mount_luks_slot: "{{ backup_luks_recovery_key_slot }}"
+auto_mount_mount_point: "{{ backup_mount_point }}"
+auto_mount_filesystem: "xfs"

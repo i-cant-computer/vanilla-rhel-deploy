@@ -1,0 +1,17 @@
+- name: Update all packages
+  become: true
+  ansible.builtin.dnf:
+    name: "*"
+    state: latest # noqa package-latest
+
+- name: Check if reboot is required
+  ansible.builtin.command: needs-restarting -r
+  register: system_update_reboot_required
+  changed_when: system_update_reboot_required.rc == 1
+  failed_when: system_update_reboot_required.rc not in [0, 1]
+
+- name: Reboot server if needed
+  become: true
+  ansible.builtin.reboot:
+    reboot_timeout: 600
+  when: system_update_reboot_required.rc == 1

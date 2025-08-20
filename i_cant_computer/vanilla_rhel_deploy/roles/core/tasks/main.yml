@@ -1,0 +1,73 @@
+- name: Install epel
+  become: true
+  ansible.builtin.dnf:
+    name: epel-release
+    state: present
+
+- name: Install core packages
+  become: true
+  ansible.builtin.dnf:
+    name:
+      - git
+      - uv
+      - vim
+      - yum-utils
+    state: present
+
+# Ensure ACL tools are present for safe become_user tmpfile handling
+- name: Install ACL utilities (setfacl)
+  become: true
+  ansible.builtin.dnf:
+    name: acl
+    state: present
+
+- name: Disable root ssh access
+  become: true
+  ansible.builtin.copy:
+    src: 99-disable-root-login
+    dest: /etc/ssh/sshd_config.d/
+    mode: "0644"
+
+- name: Restrict ssh to public key only for {{ ansible_user }}
+  become: true
+  ansible.builtin.template:
+    src: "90-ansible-pubkey-only.j2"
+    dest: "/etc/ssh/sshd_config.d/90-{{ ansible_user }}-pubkey-only"
+    mode: "0644"
+
+- name: Recover number of entries in authorized_keys for {{ ansible_user }}
+  ansible.builtin.command:
+    cmd: cat /home/ansible/.ssh/authorized_keys
+  register: core_ansible_authorized_keys
+  changed_when: false
+
+- name: Confirm it matches expected contents
+  ansible.builtin.assert:
+    that: core_ansible_authorized_keys.stdout | trim == ansible_pubkey
+    fail_msg:
+      "Unexpected entries in .ssh/authorized_keys for {{ ansible_user }}"
+
+- name: Reload ssh configuration
+  become: true
+  ansible.builtin.systemd_service:
+    name: sshd
+    state: reloaded
+  changed_when: false
+
+- name: Create core accounts and disable passwords.
+  become: true
+  ansible.builtin.user:
+    name: "{{ item }}"
+    password: "!"
+    create_home: true
+    state: present
+  loop:
+    - root
+    - "{{ ansible_user }}"
+
+- name: Increase kernel keyrings to support rootless containerised workloads
+  become: true
+  ansible.builtin.lineinfile:
+    path: /etc/sysctl.d/99-sysctl.conf
+    regex: "^kernel.keys.maxkeys"
+    line: kernel.keys.maxkeys = 5000

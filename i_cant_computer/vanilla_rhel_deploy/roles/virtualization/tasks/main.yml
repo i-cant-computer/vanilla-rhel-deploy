@@ -1,0 +1,21 @@
+- name: Configure virtualization
+  become: true
+  block:
+    - name: Configure hashicorp repo
+      ansible.builtin.copy:
+        src: hashicorp.repo
+        dest: /etc/yum.repos.d/hashicorp.repo
+        mode: "0644"
+
+    - name: Import GPG key
+      ansible.builtin.rpm_key:
+        state: present
+        key: "https://rpm.releases.hashicorp.com/gpg"
+        fingerprint: "798A EC65 4E5C 1542 8C8E 42EE AA16 FCBC A621 E701"
+
+    - name: Install virtualisation packages
+      ansible.builtin.dnf:
+        name:
+          - "@Virtualization Host"
+          - terraform
+        state: present

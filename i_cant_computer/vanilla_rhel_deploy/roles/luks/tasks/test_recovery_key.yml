@@ -1,0 +1,28 @@
+- name: Verify saved recovery key on slot {{ luks_slot }}
+  become: true
+  block:
+    - name: Create temporary file
+      ansible.builtin.tempfile:
+        state: file
+        path: "/root/"
+      register: luks_temp
+      changed_when: false
+
+    - name: Upload recovery key {{ luks_local_recovery_key }}
+      ansible.builtin.copy:
+        src: "{{ luks_local_recovery_key }}"
+        dest: "{{ luks_temp.path }}"
+        mode: "0600"
+      changed_when: false
+
+    - name: Verify key
+      ansible.builtin.command:
+        "cryptsetup luksOpen --test-passphrase --key-file={{ luks_temp.path }}
+        -S {{ luks_slot }} {{ luks_path }}"
+      changed_when: false
+  always:
+    - name: Clean up temporary file
+      ansible.builtin.file:
+        path: "{{ luks_temp.path }}"
+        state: absent
+      changed_when: false

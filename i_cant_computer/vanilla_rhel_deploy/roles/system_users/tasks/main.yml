@@ -1,0 +1,5 @@
+- name: Configure admin accounts
+  ansible.builtin.include_tasks: create_admin.yml
+  loop: "{{ system_users }}"
+  loop_control:
+    label: "{{ item.user }}"

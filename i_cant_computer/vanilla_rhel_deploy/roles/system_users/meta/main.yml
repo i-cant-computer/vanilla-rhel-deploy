@@ -1,0 +1,11 @@
+---
+galaxy_info:
+  author: i_cant_computer
+  role_name: system_users
+  description: Manage system users and group membership (e.g., libvirt), SSH keys.
+  license: MIT
+  min_ansible_version: "2.10"
+  platforms:
+    - name: EL
+      versions: ['9']
+dependencies: []

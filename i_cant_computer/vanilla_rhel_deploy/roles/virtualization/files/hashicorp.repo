@@ -1,0 +1,16 @@
+[hashicorp]
+name=Hashicorp Stable - $basearch
+# As of 02/09/25 no support for rhel 10, so choose 9 and pray.
+baseurl=https://rpm.releases.hashicorp.com/RHEL/9/$basearch/stable
+enabled=1
+gpgcheck=1
+gpgkey=https://rpm.releases.hashicorp.com/gpg
+
+[hashicorp-test]
+name=Hashicorp Test - $basearch
+# As of 02/09/25 no support for rhel 10, so choose 9 and pray.
+baseurl=https://rpm.releases.hashicorp.com/RHEL/9/$basearch/test
+enabled=0
+gpgcheck=1
+gpgkey=https://rpm.releases.hashicorp.com/gpg
+

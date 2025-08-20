@@ -1,0 +1,8 @@
+---
+- name: Update RHEL hosts
+  hosts: rhel
+  gather_facts: false
+  become: true
+  roles:
+    - i_cant_computer.vanilla_rhel_deploy.system_update
+    - i_cant_computer.vanilla_rhel_deploy.automate_system_updates

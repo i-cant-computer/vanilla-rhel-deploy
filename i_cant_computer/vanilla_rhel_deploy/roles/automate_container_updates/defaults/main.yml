@@ -1,0 +1,4 @@
+---
+automate_container_updates_podman_user: podman
+automate_container_updates_schedule: "*-*-* 01:30:00"
+automate_container_updates_randomize_delay: "10m"

@@ -1,0 +1,41 @@
+- name: Configure container workloads
+  become: true
+  block:
+    - name: Install podman
+      ansible.builtin.dnf:
+        name: podman
+        state: present
+
+    - name: Restrict ssh access for user {{ podman_user }}
+      ansible.builtin.template:
+        src: "90-podman-no-access.j2"
+        dest: "/etc/ssh/sshd_config.d/90-{{ podman_user }}-no-access"
+        mode: "0644"
+
+    - name: Reload ssh configuration
+      ansible.builtin.systemd_service:
+        name: sshd
+        state: reloaded
+      changed_when: false
+
+    - name: Create {{ podman_user }}
+      ansible.builtin.user:
+        name: "{{ podman_user }}"
+        password: "!"
+        create_home: true
+        groups: ""
+        state: present
+
+    - name: Enable linger for {{ podman_user }}
+      ansible.builtin.command:
+        cmd: "loginctl enable-linger {{ podman_user }}"
+        creates: "/var/lib/systemd/linger/{{ podman_user }}"
+
+    - name: Ensure XDG_RUNTIME_DIR is set correctly
+      ansible.builtin.lineinfile:
+        path: "/home/{{ podman_user }}/.bash_profile"
+        line: 'export XDG_RUNTIME_DIR="/run/user/$(id -u)"'
+        owner: "{{ podman_user }}"
+        group: "{{ podman_user }}"
+        create: true
+        mode: "0644"
