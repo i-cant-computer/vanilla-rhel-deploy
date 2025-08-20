@@ -1,0 +1,47 @@
+- name: Install core packages
+  ansible.builtin.dnf:
+    name:
+      - git
+      - libvirt
+      - podman
+      - uv
+      - vim
+      - virt-install
+      - yum-utils
+    state: latest
+  become: yes
+
+- name: Harden ssh access
+  ansible.builtin.copy:
+    src: etc/ssh/sshd_config.d/
+    dest: /etc/ssh/sshd_config.d/
+  become: yes
+
+- name: Reload ssh configuration
+  ansible.builtin.command: systemctl reload sshd
+  become: yes
+  changed_when: false
+
+- name: Create core accounts and disable passwords.
+  ansible.builtin.user:
+    name: "{{ item }}"
+    password: "!"
+    create_home: true
+    state: present
+  become: yes
+  loop:
+    - root
+    - ansible
+    - podman
+
+- name: Ensure XDG_RUNTIME_DIR set for podman
+  ansible.builtin.lineinfile:
+    path: /home/podman/.bash_profile
+    line: export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+    create: yes
+  become: yes
+
+- name: Enable linger for podman
+  ansible.builtin.command: loginctl enable-linger podman
+  become: yes
+  changed_when: false

@@ -1,0 +1,6 @@
+# Restrict 'ansible' to public key authentication only
+Match User ansible
+    PasswordAuthentication no
+    KeyboardInteractiveAuthentication no
+    ChallengeResponseAuthentication no
+    AuthenticationMethods publickey

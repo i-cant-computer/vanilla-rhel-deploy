@@ -1,0 +1,4 @@
+luks_uuid: "{{ primary_luks_uuid }}"
+luks_passphrase: "{{ primary_luks_passphrase }}"
+luks_path: "/dev/disk/by-uuid/{{ luks_uuid }}"
+luks_slot: "{{ primary_luks_recovery_key_slot }}"

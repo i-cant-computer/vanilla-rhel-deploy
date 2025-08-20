@@ -1,0 +1,15 @@
+- name: Update all packages
+  dnf: name=* state=latest
+  become: yes
+
+- name: Check if reboot is required
+  ansible.builtin.command: needs-restarting -r
+  register: reboot_required
+  changed_when: false
+  ignore_errors: true
+
+- name: Reboot server if needed
+  ansible.builtin.reboot:
+    reboot_timeout: 600
+  when: reboot_required.rc != 0
+  become: yes

@@ -1,0 +1,2 @@
+# Disable the root login
+PermitRootLogin no

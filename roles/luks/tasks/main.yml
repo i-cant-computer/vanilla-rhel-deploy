@@ -1,0 +1,94 @@
+- ansible.builtin.set_fact:
+    host_recovery_key: "/etc/.luks-slot{{ luks_slot }}-{{ luks_uuid }}.crypt"
+    luks_header_backup_path: "/root/.luks-{{ luks_uuid }}.header"
+- ansible.builtin.set_fact:
+    local_recovery_key: "files/{{ inventory_hostname }}/{{ host_recovery_key }}"
+
+- name: Check if local key {{ local_recovery_key }} present
+  ansible.builtin.stat:
+    path: "{{ local_recovery_key }}"
+  delegate_to: localhost
+  register: _local_recovery_key
+  changed_when: false
+
+- name: Check if remote key {{ host_recovery_key }} present
+  ansible.builtin.stat:
+    path: "{{ host_recovery_key }}"
+  become: yes
+  register: _host_recovery_key
+  changed_when: false
+
+- name: Verify consistency of recovery keys on local and remote
+  ansible.builtin.fail:
+    msg: Missing key from local or remote
+  when: _host_recovery_key.stat.exists and not _local_recovery_key.stat.exists
+  when: not _host_recovery_key.stat.exists and _local_recovery_key.stat.exists 
+
+- name: Verify recovery key contents on localhost and remote
+  ansible.builtin.fail:
+    msg: Contents do not match
+  when: 
+    - _host_recovery_key.stat.checksum is defined
+    - _local_recovery_key.stat.checksum is defined
+    - _host_recovery_key.stat.checksum != _local_recovery_key.stat.checksum
+
+- name: Test recovery key
+  ansible.builtin.include_tasks: test_recovery_key.yml
+  when: _local_recovery_key.stat.exists
+
+- name: "Create recovery key for LUKS {{ luks_uuid }} in slot {{ luks_slot }}"
+  when: not _local_recovery_key.stat.exists
+  block:
+    - name: Create key and save to host
+      ansible.builtin.copy:
+        dest: "{{ host_recovery_key }}"
+        mode: 0600
+        content: >
+          {{ lookup('ansible.builtin.password', '/dev/null', length=64,
+          chars=['ascii_lowercase']) | batch(8) | map('join') | join('-') }}
+
+    - ansible.builtin.include_tasks: clear_slot.yml
+
+    - name: Add recovery key to partition {{ luks_uuid }}
+      ansible.builtin.command:
+        "cryptsetup luksAddKey --new-key-slot={{ luks_slot }} {{ luks_path }} {{
+        host_recovery_key }}"
+      args:
+        stdin: "{{ luks_passphrase }}"
+
+    - name: Save recovery key for partition {{ luks_uuid }}
+      ansible.builtin.fetch:
+        src: "{{ host_recovery_key }}"
+        dest: files
+  become: yes
+
+- name: Check LUKS header backup saved for partition {{ luks_uuid }}
+  ansible.builtin.stat:
+    path: "files/{{ inventory_hostname }}/{{ luks_header_backup_path }}"
+  delegate_to: localhost
+  register: local_luks_header_backup
+
+- name: Backup LUKS header for partition {{ luks_uuid }}
+  when: not local_luks_header_backup.stat.exists
+  block:
+    - name: Create LUKS header backup for partition {{ luks_uuid }}
+      ansible.builtin.command:
+        cryptsetup luksHeaderBackup {{ luks_path }} --header-backup-file {{
+        luks_header_backup_path }}
+
+    - name: Set ownership for header backup
+      ansible.builtin.file:
+        path: "{{ luks_header_backup_path }}"
+        mode: 0600
+
+    - name: Download LUKS header for partition {{ luks_uuid }}
+      ansible.builtin.fetch:
+        src: "{{ luks_header_backup_path }}"
+        dest: files
+
+  always:
+    - name: Delete backup header from remote
+      ansible.builtin.file:
+        path: "{{ luks_header_backup_path }}"
+        state: absent
+  become: yes

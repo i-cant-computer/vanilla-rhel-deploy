@@ -1,0 +1,48 @@
+- ansible.builtin.set_fact:
+    luks_target: luks-{{ luks_uuid }}
+    luks_key: "/etc/.luks-slot{{ luks_slot }}-{{ luks_uuid }}.crypt"
+- ansible.builtin.set_fact:
+    crypttab_entry:
+      "{{ luks_target }} UUID={{ luks_uuid }} {{ luks_key }} luks,discard"
+    fstab_entry:
+      "/dev/mapper/{{ luks_target }} {{ mount_point }} {{ filesystem }}
+      defaults,nofail 0 0"
+
+- name: Add entry to cryptfile
+  ansible.builtin.lineinfile:
+    path: /etc/crypttab
+    line: "{{ crypttab_entry }}"
+    search_string: "{{ crypttab_entry }}"
+  become: yes
+  register: crypttab
+
+- name: Add entry to fstab
+  ansible.builtin.lineinfile:
+    path: /etc/fstab
+    line: "{{ fstab_entry }}"
+    search_string: "{{ fstab_entry }}"
+  become: yes
+  register: fstab
+
+- name: Reboot the server
+  ansible.builtin.reboot:
+    reboot_timeout: 600
+    test_command: uptime
+  become: yes
+  when: crypttab.changed or fstab.changed
+
+- name: Gather mounts
+  ansible.builtin.command: mount
+  register: mnt_cmd
+  changed_when: false
+
+- name: Verify new mountpoint present
+  ansible.builtin.set_fact:
+    mount_successful: "{{ mnt_cmd | regex_search( search_pattern ) }}"
+  vars:
+    search_pattern:
+      "{{ luks_target }} on {{ mount_point }} type {{ filesystem}}"
+
+- name: Assert mount succeeded
+  ansible.builtin.assert:
+    that: mount_successful

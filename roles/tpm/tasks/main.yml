@@ -1,0 +1,63 @@
+- name: Install TPM packages
+  ansible.builtin.dnf:
+    name:
+      - tpm2-tools
+      - tpm2-tss
+      - clevis-luks
+      - clevis-dracut
+    state: latest
+  become: yes
+
+- name: Confirm TPM device is present
+  ansible.builtin.stat:
+    path: "/dev/tpm0"
+  register: tpm_device_file
+  failed_when: not tpm_device_file.stat.exists
+  changed_when: false
+
+- name: Confirm TPM version 2
+  ansible.builtin.find:
+    paths: /sys/class/tpm/tpm0/
+    pattern: tpm_version_major
+    use_regex: yes
+    contains: "^2$"
+  register: tpm_version_2
+  failed_when: not tpm_version_2
+
+- name: "Verify LUKS {{ luks_uuid }} header integrity for partition "
+  ansible.builtin.command: "cryptsetup luksDump {{ luks_path }}"
+  become: yes
+  register: luks_dump_result
+  changed_when: false
+
+- name: "Check clevis configuration for LUKS {{ luks_uuid }}"
+  vars:
+    search_pattern: "clevis\\s+Keyslot:\\s+{{ luks_slot }}"
+  ansible.builtin.set_fact:
+    clevis_bind_required:
+      "{{ luks_dump_result.stdout | regex_search( search_pattern ) is none }}"
+
+- name: Clear slot {{ luks_slot }}
+  ansible.builtin.include_tasks: ../../luks/tasks/clear_slot.yml
+  when: clevis_bind_required or false
+
+- name: "Bind TPM to LUKS {{ luks_uuid }} in slot {{ luks_slot }}"
+  ansible.builtin.command:
+    "clevis luks bind -d {{ luks_path }} -s {{ luks_slot }} -k - tpm2 '{{
+    clevis_tpm_config | to_json }}'"
+  args:
+    stdin: "{{ luks_passphrase }}"
+  become: yes
+  when: clevis_bind_required or false
+
+- name: Rebuild all kernel images to include clevis support
+  ansible.builtin.command: dracut -f -v --regenerate-all
+  become: yes
+  when: clevis_bind_required or false
+
+- name: Reboot the server
+  ansible.builtin.reboot:
+    reboot_timeout: 600
+    test_command: uptime
+  become: yes
+  when: clevis_bind_required

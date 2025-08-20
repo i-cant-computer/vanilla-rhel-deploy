@@ -1,0 +1,10 @@
+- hosts: servers
+  user: ansible
+  roles:
+    - role: tpm
+    - role: luks
+    - role: luks
+      vars:
+        luks_uuid: "{{ backup_luks_uuid }}"
+        luks_passphrase: "{{ backup_luks_passphrase }}"
+    - role: auto_mount

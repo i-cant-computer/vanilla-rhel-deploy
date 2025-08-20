@@ -1,0 +1,5 @@
+- hosts: servers
+  user: ansible
+  roles:
+    - core
+    - update
