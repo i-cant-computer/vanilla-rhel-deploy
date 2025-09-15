@@ -1,0 +1,3 @@
+automate_backups_mailer_version: main
+automate_backups_agent_version: main
+automate_backups_schedule: "*-*-* 02:00:00"

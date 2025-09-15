@@ -1,0 +1,14 @@
+[Unit]
+Description=Backup agent service
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/root/m365-mailer
+IgnoreSIGPIPE=no
+Environment="CURSOR=/root/.backup-agent.cursor"
+ExecStart=/bin/sh -c '/usr/bin/journalctl --no-pager --cursor-file=${CURSOR} --unit backup-agent.service | /usr/bin/uv run /root/m365-mailer/mailer.py -s "Backup success"'
+
+[Install]
+WantedBy=multi-user.target

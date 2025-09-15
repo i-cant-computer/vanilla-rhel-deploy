@@ -1,0 +1,81 @@
+- name: Configure container backups
+  become: true
+  block:
+    - name: Create export folder
+      ansible.builtin.file:
+        path: "{{ export_path }}"
+        owner: "{{ podman_user }}"
+        group: "{{ podman_user }}"
+        mode: "0755"
+        state: directory
+
+    - name: Download M365 mailer
+      ansible.builtin.git:
+        repo: https://github.com/i-cant-computer/m365-mailer.git
+        dest: /root/m365-mailer/
+        version: "{{ automate_backups_mailer_version }}"
+
+    - name: Copy m365mailer/config.yaml
+      ansible.builtin.template:
+        src: mailer_config.j2
+        dest: /root/m365-mailer/config.yaml
+        owner: root
+        group: root
+        mode: "0600"
+
+    - name: Download backup agent
+      ansible.builtin.git:
+        repo: https://github.com/i-cant-computer/backup-agent.git
+        dest: /root/backup-agent/
+        version: "{{ automate_backups_agent_version }}"
+
+    - name: Copy backup-agent/config.yaml
+      ansible.builtin.template:
+        src: backup_config.j2
+        dest: /root/backup-agent/config.yaml
+        owner: root
+        group: root
+        mode: "0600"
+
+    - name: Upload SELinux policy
+      ansible.builtin.copy:
+        src: backup-agent.te
+        dest: /tmp/backup-agent.te
+        mode: "0700"
+
+    - name: Compile policy module
+      ansible.builtin.command:
+        cmd: make -f /usr/share/selinux/devel/Makefile backup-agent.pp
+        chdir: /tmp/
+      changed_when: false
+
+    - name: Install policy module
+      ansible.builtin.command:
+        cmd: semodule -X 300 -i /tmp/backup-agent.pp
+      changed_when: false
+
+    - name: Configure backup services
+      ansible.builtin.copy:
+        src: "{{ item }}"
+        dest: /etc/systemd/system/
+        owner: root
+        group: root
+        mode: "0644"
+      loop:
+        - "backup-agent.service"
+        - "backup-success.service"
+        - "backup-failed.service"
+
+    - name: Copy backup-agent/config.yaml
+      ansible.builtin.template:
+        src: backup-agent.timer.j2
+        dest: /etc/systemd/system/backup-agent.timer
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Enable backup timer
+      ansible.builtin.systemd:
+        name: backup-agent.timer
+        daemon_reload: true
+        enabled: true

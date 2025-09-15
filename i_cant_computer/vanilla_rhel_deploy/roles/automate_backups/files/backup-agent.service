@@ -1,0 +1,15 @@
+[Unit]
+Description=Backup agent service
+Wants=local-fs.target
+After=local-fs.target
+OnFailure=backup-failed.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/root/backup-agent
+ExecStart=/usr/bin/uv run /root/backup-agent/backup_agent.py -e -b -m -c /root/backup-agent/config.yaml
+ExecStartPost=/usr/bin/systemctl start backup-success.service
+
+[Install]
+WantedBy=multi-user.target
+

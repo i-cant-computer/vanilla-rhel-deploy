@@ -1,0 +1,8 @@
+[Unit]
+Description=Run backups daily
+
+[Timer]
+OnCalendar={{ automate_backups_schedule }}
+
+[Install]
+WantedBy=timers.target

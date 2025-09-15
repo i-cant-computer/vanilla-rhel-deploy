@@ -1,14 +1,14 @@
 # Ansible Collection — i_cant_computer.vanilla_rhel_deploy
 
-Opinionated Ansible collection to deploy and harden RHEL‑based home‑lab
-servers. It covers TPM‑backed LUKS unlock, recovery key management,
-auto‑mounts, core packages, system users, Podman, virtualization, and
-automated updates.
+Opinionated Ansible collection to deploy and harden RHEL‑based home‑lab servers.
+It covers TPM‑backed LUKS unlock, recovery key management, auto‑mounts, core
+packages, system users, Podman, virtualization, and automated updates.
 
 ## Requirements
 
 - ansible-core: >= 2.16 (matches `meta/runtime.yml`)
-- Platform: Enterprise Linux 9 family and derivatives (e.g., RHEL 9, AlmaLinux 9, Rocky Linux 9)
+- Platform: Enterprise Linux 9 family and derivatives (e.g., RHEL 9, AlmaLinux
+  9, Rocky Linux 9)
 - Access: SSH to target hosts with a privileged user (e.g., `ansible` in
   `wheel`)
 
@@ -25,7 +25,8 @@ automated updates.
   - auto_mount: `min_ansible_version: '2.10'`
   - core: `min_ansible_version: '2.16'` (uses `ansible.builtin.systemd_service`)
   - system_users: `min_ansible_version: '2.10'`
-  - podman: `min_ansible_version: '2.16'` (uses `ansible.builtin.systemd_service`)
+  - podman: `min_ansible_version: '2.16'` (uses
+    `ansible.builtin.systemd_service`)
   - virtualization: `min_ansible_version: '2.10'`
   - system_update: `min_ansible_version: '2.10'`
   - automate_container_updates: `min_ansible_version: '2.10'`
@@ -37,12 +38,6 @@ Note: When installing/using the collection, the collection‑level
 reusing roles outside the collection.
 
 ## Installation
-
-- From Galaxy
-
-  ```bash
-  ansible-galaxy collection install i_cant_computer.vanilla_rhel_deploy
-  ```
 
 - From source (build and install locally)
 
@@ -96,8 +91,8 @@ Roles (FQCN) and docs:
   unlock on boot. See `roles/tpm/README.md`.
 - `i_cant_computer.vanilla_rhel_deploy.luks` — Manage/verify LUKS recovery keys
   and header backups. See `roles/luks/README.md`.
-- `i_cant_computer.vanilla_rhel_deploy.auto_mount` — Auto‑mount a secondary
-  LUKS filesystem at boot. See `roles/auto_mount/README.md`.
+- `i_cant_computer.vanilla_rhel_deploy.auto_mount` — Auto‑mount a secondary LUKS
+  filesystem at boot. See `roles/auto_mount/README.md`.
 - `i_cant_computer.vanilla_rhel_deploy.core` — Base packages, SSH hardening,
   base service accounts. See `roles/core/README.md`.
 - `i_cant_computer.vanilla_rhel_deploy.system_users` — Manage users, groups, and
@@ -113,6 +108,9 @@ Roles (FQCN) and docs:
 - `i_cant_computer.vanilla_rhel_deploy.automate_container_updates` — Configure
   Podman auto‑update timer (user scope). See
   `roles/automate_container_updates/README.md`.
+- `i_cant_computer.vanilla_rhel_deploy.automate_backups` — Configure container
+  backups with Borg and email notifications. See
+  `roles/automate_backups/README.md`.
 
 Plugins
 
@@ -128,8 +126,7 @@ Plugins
 - Variables and defaults are documented per role in each role’s README and
   `defaults/main.yml`.
 - Highlights:
-  - LUKS/TPM: `luks_uuid`, `luks_passphrase`, `luks_slot`,
-    `clevis_tpm_config.*`
+  - LUKS/TPM: `luks_uuid`, `luks_passphrase`, `luks_slot`, `clevis_tpm_config.*`
   - Auto‑updates: `automate_system_updates_schedule`,
     `automate_system_updates_randomize_delay`
   - Podman auto‑updates: `automate_container_updates_podman_user`,

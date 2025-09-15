@@ -1,0 +1,12 @@
+module backup-agent 1.0;
+
+require {
+        type unconfined_service_t;
+        type system_dbusd_t;
+        class fifo_file write;
+        #class unix_stream_socket { read write };
+}
+
+#============= system_dbusd_t ==============
+allow system_dbusd_t unconfined_service_t:fifo_file write;
+#allow system_dbusd_t unconfined_service_t:unix_stream_socket { read write };
