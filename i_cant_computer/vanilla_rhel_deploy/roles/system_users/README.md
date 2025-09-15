@@ -5,7 +5,7 @@ and configures SSH keys.
 
 Variables
 
-- `system_users_admins` (list[dict], required): List of admin/user specs to
+- `system_users` (list[dict], required): List of admin/user specs to
   create/update.
   - `user` (string, required): Username to manage.
   - `hash` (string, required): Password hash (use `!` to disable password

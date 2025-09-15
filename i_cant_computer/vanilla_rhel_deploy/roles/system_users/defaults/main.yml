@@ -1,2 +1,0 @@
----
-system_users_admins: "{{ admins }}"
