@@ -5,21 +5,15 @@ podman_user: "{{ podman_user }}"
 
 # List of named volumes exported for the backup
 export_volumes:
-  - "gitlab-config"
-  - "gitlab-logs"
-  - "gitlab-data"
-  - "cloudflared"
-  - "step-ca"
-  - "transmission"
-  - "unifi"
+{% for item in export_volumes %}
+  - {{ item }}
+{% endfor %}
 
 # List of containers that need to be stopped for the export
 export_containers:
-  - "gitlab"
-  - "step-ca"
-  - "cloudflared"
-  - "transmission"
-  - "unifi"
+{% for item in export_containers %}
+  - {{ item }}
+{% endfor %}
 
 # Path where volumes are exported
 export_path: "{{ export_path }}"
@@ -36,5 +30,6 @@ borg_repository: "{{ backup_path }}/borg/repository"
 borg_password: "{{ borg_password }}"
 # Paths included in borg backups
 borg_backup_paths:
-  - "{{ export_path }}"
-  - "/srv/recovery/"
+{% for item in borg_backup_paths %}
+  - {{ item }}
+{% endfor %}
